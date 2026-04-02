@@ -1,0 +1,65 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                     String   @id @default(uuid())
+  name                   String
+  age                    String?
+  gender                 String?
+  conditions             String?
+  isPro                  Boolean  @default(false)
+  notificationTime       String?
+  hasCompletedOnboarding Boolean  @default(false)
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+  logs                   Log[]
+  reports                Report[]
+}
+
+model Log {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  date      String   // Using YYYY-MM-DD format as string
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  symptoms  LogSymptom[]
+  triggers  LogTrigger[]
+
+  @@unique([userId, date]) // Ensure one log per day per user
+}
+
+model LogSymptom {
+  id        String @id @default(uuid())
+  logId     String
+  log       Log    @relation(fields: [logId], references: [id], onDelete: Cascade)
+  symptomId String
+  severity  Int
+}
+
+model LogTrigger {
+  id        String @id @default(uuid())
+  logId     String
+  log       Log    @relation(fields: [logId], references: [id], onDelete: Cascade)
+  triggerId String
+}
+model Report {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  fileName  String
+  type      String   @default("PDF")
+  createdAt DateTime @default(now())
+}
